@@ -47,6 +47,8 @@ class ExaminerProfile(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), unique=True, nullable=False)
     full_name = db.Column(db.String(255), nullable=False)
     examiner_id = db.Column(db.String(64), unique=True)
+    contact_details = db.Column(db.String(255))
+    department = db.Column(db.String(255))
     is_approved = db.Column(db.Boolean, nullable=False, default=False)
     is_active = db.Column(db.Boolean, nullable=False, default=True)
     user = db.relationship("User", back_populates="examiner_profile")
@@ -76,6 +78,21 @@ class Examination(db.Model):
     status = db.Column(db.String(20), nullable=False)
     course = db.relationship("Course", backref="examinations")
     slots = db.relationship("ExaminationSlot", back_populates="examination")
+    assignments = db.relationship("ExaminerAssignment", back_populates="examination")
+
+
+class ExaminerAssignment(db.Model):
+    __tablename__ = "examiner_assignments"
+    id = db.Column(db.Integer, primary_key=True)
+    examination_id = db.Column(db.Integer, db.ForeignKey("examinations.id"), nullable=False)
+    examiner_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    status = db.Column(db.String(20), nullable=False, default="active")
+    __table_args__ = (
+        UniqueConstraint("examination_id", "examiner_id", name="uq_examiner_assignment"),
+        CheckConstraint("status IN ('active', 'inactive')", name="ck_assignment_status"),
+    )
+    examination = db.relationship("Examination", back_populates="assignments")
+    examiner = db.relationship("User", foreign_keys=[examiner_id])
 
 
 class ExaminationSlot(db.Model):
@@ -123,10 +140,16 @@ class BookingHistory(db.Model):
     __tablename__ = "booking_history"
     id = db.Column(db.Integer, primary_key=True)
     booking_id = db.Column(db.Integer, db.ForeignKey("bookings.id"), nullable=False)
+    old_slot_id = db.Column(db.Integer, db.ForeignKey("examination_slots.id"))
+    new_slot_id = db.Column(db.Integer, db.ForeignKey("examination_slots.id"))
+    actor_id = db.Column(db.Integer, db.ForeignKey("users.id"))
     action = db.Column(db.String(30), nullable=False)
     details = db.Column(db.String(255), nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     booking = db.relationship("Booking", back_populates="history")
+    old_slot = db.relationship("ExaminationSlot", foreign_keys=[old_slot_id])
+    new_slot = db.relationship("ExaminationSlot", foreign_keys=[new_slot_id])
+    actor = db.relationship("User", foreign_keys=[actor_id])
 
 
 class ExaminationRubric(db.Model):
@@ -147,6 +170,7 @@ class Evaluation(db.Model):
     examiner_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     total_marks = db.Column(db.Float, nullable=False)
     remarks = db.Column(db.Text)
+    is_finalized = db.Column(db.Boolean, nullable=False, default=False)
     is_published = db.Column(db.Boolean, nullable=False, default=False)
     published_at = db.Column(db.DateTime)
     __table_args__ = (
@@ -155,3 +179,21 @@ class Evaluation(db.Model):
     )
     booking = db.relationship("Booking", back_populates="evaluation")
     examiner = db.relationship("User", foreign_keys=[examiner_id])
+    scores = db.relationship(
+        "EvaluationScore", back_populates="evaluation", cascade="all, delete-orphan"
+    )
+
+
+class EvaluationScore(db.Model):
+    __tablename__ = "evaluation_scores"
+    id = db.Column(db.Integer, primary_key=True)
+    evaluation_id = db.Column(db.Integer, db.ForeignKey("evaluations.id"), nullable=False)
+    rubric_id = db.Column(db.Integer, db.ForeignKey("examination_rubrics.id"), nullable=False)
+    awarded_marks = db.Column(db.Float, nullable=False)
+    remarks = db.Column(db.Text)
+    __table_args__ = (
+        UniqueConstraint("evaluation_id", "rubric_id", name="uq_evaluation_rubric"),
+        CheckConstraint("awarded_marks >= 0", name="ck_score_nonnegative_marks"),
+    )
+    evaluation = db.relationship("Evaluation", back_populates="scores")
+    rubric = db.relationship("ExaminationRubric")

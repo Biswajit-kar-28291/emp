@@ -16,13 +16,21 @@ Flask-SQLAlchemy, SQLite, HTML, and Bootstrap CSS.
 - Booking cancellation before the deadline with complete booking history
 - Published results and examiner feedback for Students
 - Student profile editing
-- Examiner Dashboard with empty states for assignments, slots, and evaluations
-- Admin Dashboard with user counts and honest examination-data empty states
+- Examiner access restricted to active, approved Examiner profiles
+- Examiner Dashboard with assignment, slot, booking, and evaluation counts
+- Assigned examination and rubric viewing
+- Examiner slot creation and management with timeline, capacity, and overlap checks
+- Examiner-owned booked Student lists
+- Rubric-based evaluation drafts and final submission for Admin publication
+- Examiner profile editing for permitted identity, contact, and department fields
+- Admin Dashboard with live totals for courses, examinations, users, slots, bookings, and pending approvals
+- Admin course, examination, rubric, Examiner approval, assignment, slot, and booking management
+- Admin lifecycle controls, safe deletion checks, booking rescheduling, and exceptional Examiner reassignment
+- Server-rendered Admin search and filters for Students, Examiners, courses, examinations, slots, and bookings
 - SQLite tables created automatically when `run.py` starts
 
 The current project does not use Flask-Login, JavaScript, an API, or authentication
-tokens. Course and examination administration, examiner slot management, and
-evaluation entry are not implemented yet.
+tokens. Result publication remains an Admin responsibility.
 
 ## Requirements
 
@@ -80,7 +88,21 @@ again does not replace an existing Admin account or its password.
 | `/student/<user_id>/results` | Published Student results and feedback |
 | `/student/<user_id>/profile` | View or edit the Student profile |
 | `/examiner/<user_id>` | Approved Examiner Dashboard |
+| `/examiner/<user_id>/examinations` | View assigned examinations and rubrics |
+| `/examiner/<user_id>/slots` | Create and manage owned examination slots |
+| `/examiner/<user_id>/students` | View Students booked into owned slots |
+| `/examiner/<user_id>/evaluations` | View eligible evaluation work |
+| `/examiner/<user_id>/evaluations/<booking_id>` | Save or submit rubric scores |
+| `/examiner/<user_id>/profile` | View or edit permitted Examiner profile fields |
 | `/admin/<user_id>` | Admin Dashboard |
+| `/admin/<user_id>/courses` | Search and manage courses |
+| `/admin/<user_id>/examinations` | Search, manage, and control examination lifecycles |
+| `/admin/<user_id>/examinations/<examination_id>/rubrics` | Manage examination rubrics |
+| `/admin/<user_id>/examiners` | Search, approve, deactivate, and update Examiners |
+| `/admin/<user_id>/assignments` | Manage Examiner assignments |
+| `/admin/<user_id>/students` | Search registered Students |
+| `/admin/<user_id>/slots` | Filter slots and perform exceptional Examiner reassignment |
+| `/admin/<user_id>/bookings` | Search bookings, view history, and reschedule active bookings |
 | `/logout` | Returns to the login page using POST |
 
 ## Important password notice

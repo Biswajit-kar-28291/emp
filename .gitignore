@@ -7,6 +7,9 @@ __pycache__/
 instance/
 *.sqlite3
 
+# Local coding-style reference; never publish with the EMP project
+reference/
+
 
 
 
